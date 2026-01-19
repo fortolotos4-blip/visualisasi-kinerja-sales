@@ -1,7 +1,9 @@
 #!/bin/sh
 
-echo "Running Laravel setup..."
+echo "Installing dependencies..."
+composer install --no-dev --optimize-autoloader
 
+echo "Preparing Laravel..."
 php artisan key:generate --force || true
 php artisan migrate --force || true
 php artisan db:seed --force || true
