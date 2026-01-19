@@ -15,8 +15,5 @@ echo "Running migrations & seeders..."
 php artisan migrate --force || true
 php artisan db:seed --force || true
 
-echo "Caching config..."
-php artisan config:cache
-
 echo "Starting Laravel server..."
 php artisan serve --host=0.0.0.0 --port=10000
