@@ -3,16 +3,18 @@
 echo "Installing dependencies (no scripts)..."
 composer install --no-dev --optimize-autoloader --no-scripts
 
-echo "Preparing Laravel..."
-php artisan key:generate --force || true
+echo "Preparing Laravel configuration..."
 php artisan config:clear
 php artisan cache:clear
+php artisan config:cache
 
 echo "Running package discovery..."
-php artisan package:discover --ansi || true
+php artisan package:discover --ansi
 
-echo "Running migrations & seeders..."
-php artisan migrate --force || true
+echo "Running migrations..."
+php artisan migrate --force
+
+echo "Running seeders..."
 php artisan db:seed --force || true
 
 echo "Starting Laravel server..."
