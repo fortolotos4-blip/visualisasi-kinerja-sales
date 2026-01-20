@@ -14,7 +14,7 @@ class CreateSalesOrdersTable extends Migration
     public function up()
     {
         Schema::create('sales_orders', function (Blueprint $table) {
-    $table->id();
+    $table->bigIncrements('id');
     $table->string('nomor_so')->unique();
     $table->date('tanggal');
     $table->unsignedBigInteger('sales_id');

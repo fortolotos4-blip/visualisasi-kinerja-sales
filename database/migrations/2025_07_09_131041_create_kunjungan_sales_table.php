@@ -14,7 +14,7 @@ class CreateKunjunganSalesTable extends Migration
     public function up()
 {
     Schema::create('kunjungan_sales', function (Blueprint $table) {
-        $table->id();
+        $table->bigIncrements('id');
         $table->unsignedBigInteger('sales_id');
         $table->unsignedBigInteger('customer_id');
         $table->date('tanggal_kunjungan');

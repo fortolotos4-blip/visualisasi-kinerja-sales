@@ -14,7 +14,7 @@ class CreatePenjualanTable extends Migration
     public function up()
 {
     Schema::create('penjualan', function (Blueprint $table) {
-        $table->id();
+        $table->bigIncrements('id');
         $table->date('tanggal');
         $table->unsignedBigInteger('sales_id');
         $table->unsignedBigInteger('customer_id');

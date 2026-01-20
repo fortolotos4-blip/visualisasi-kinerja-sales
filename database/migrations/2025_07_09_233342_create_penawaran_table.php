@@ -14,7 +14,7 @@ class CreatePenawaranTable extends Migration
     public function up()
     {
         Schema::create('penawaran', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
             $table->string('nomor_penawaran')->unique();
             $table->unsignedBigInteger('sales_id');
             $table->unsignedBigInteger('customer_id');

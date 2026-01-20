@@ -14,7 +14,7 @@ class CreateWilayahTable extends Migration
     public function up()
 {
     Schema::create('wilayah', function (Blueprint $table) {
-        $table->id();
+        $table->bigIncrements('id');
         $table->string('kode_wilayah')->unique();
         $table->string('nama_wilayah');
         $table->timestamps();

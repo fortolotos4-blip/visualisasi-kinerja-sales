@@ -14,7 +14,7 @@ class CreateTargetSalesTable extends Migration
     public function up()
     {
     Schema::create('target_sales', function (Blueprint $table) {
-    $table->id();
+    $table->bigIncrements('id');
     $table->unsignedBigInteger('sales_id');
     $table->integer('target'); // target dalam rupiah
     $table->string('bulan', 2); // format: '01' sampai '12'
