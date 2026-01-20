@@ -90,7 +90,7 @@ class DashboardSalesController extends Controller
         ->select(
             'sales_orders.id',
             'sales_orders.total_harga as total_tagihan',
-            DB::raw('COALESCE(SUM(CASE WHEN pembayaran.status = "diterima" THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar')
+            DB::raw("COALESCE(SUM(CASE WHEN pembayaran.status = 'diterima' THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar")
         )
         ->where('sales_orders.sales_id', $sales->id)
         ->whereMonth('sales_orders.tanggal', $bulan)
@@ -185,7 +185,7 @@ class DashboardSalesController extends Controller
             ->select(
                 'sales_orders.id',
                 'sales_orders.total_harga as total_tagihan',
-                DB::raw('COALESCE(SUM(CASE WHEN pembayaran.status = "diterima" THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar')
+                DB::raw("COALESCE(SUM(CASE WHEN pembayaran.status = 'diterima' THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar")
             )
             ->where('sales_orders.sales_id', $sales->id)
             ->whereMonth('sales_orders.tanggal', $bulan)
