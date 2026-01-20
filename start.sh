@@ -2,6 +2,9 @@
 
 composer install --no-dev --optimize-autoloader --no-scripts
 
+# INI KUNCI TERAKHIR
+composer dump-autoload
+
 php artisan config:clear
 php artisan cache:clear
 php artisan config:cache
