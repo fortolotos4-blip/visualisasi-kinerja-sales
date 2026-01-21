@@ -6,36 +6,45 @@
 
     {{-- Pop-up Warning Kontribusi Parameter --}}
     @if(!$kontribusi)
-        <div class="modal fade" id="warningModal" tabindex="-1" aria-labelledby="warningModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-warning shadow-lg">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title" id="warningModalLabel">⚠️ Pemberitahuan</h5>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-2">
-                            Belum ada <strong> Indikator Penilaian </strong> untuk tahun ini.
-                        </p>
-                        <p class="mb-0">
-                            Silakan buat terlebih dahulu agar bobot penilaian (kunjungan, penawaran, penjualan) bisa dihitung dengan benar.
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <a href="{{ route('kontribusi_parameters.index') }}" class="btn btn-primary">
-                            Buat Sekarang
-                        </a>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Nanti</button>
-                    </div>
+    <div class="modal fade" id="warningModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-warning">
+                <div class="modal-header bg-warning text-dark py-2">
+                    <h6 class="modal-title">Informasi</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body small">
+                    Bobot penilaian bulan ini belum diatur.  
+                    Skor kinerja mungkin belum akurat.
+                </div>
+                <div class="modal-footer py-2">
+                    <a href="{{ route('kontribusi_parameters.index') }}" class="btn btn-sm btn-primary">
+                        Atur
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                        Tutup
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+    @endif
+    @if(!$kontribusi)
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                var warningModal = new bootstrap.Modal(document.getElementById('warningModal'));
-                warningModal.show();
-            });
-        </script>
+        const key = 'manager_warning_kontribusi';
+        const today = new Date().toISOString().slice(0,10);
+        const lastShown = localStorage.getItem(key);
+
+        if (lastShown !== today) {
+            const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+            modal.show();
+            localStorage.setItem(key, today);
+        }
+
+    });
+    </script>
     @endif
 
     <h4>Dashboard Kinerja Sales - Bulan {{ date('F', mktime(0,0,0,$bulan,1)) }} {{ $tahun }}</h4>
