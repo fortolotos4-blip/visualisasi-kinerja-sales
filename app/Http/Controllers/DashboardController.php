@@ -47,6 +47,7 @@ class DashboardController extends Controller
         ];
     }
 
+    
     // -----------------------------
     // Ringkasan
     // -----------------------------
@@ -192,10 +193,17 @@ class DashboardController extends Controller
         ? round(($totalPenjualanBulan / $totalTargetBulan) * 100, 2)
         : 0;
 
+    // -----------------------------
+    // Sales BELUM punya wilayah
+    // -----------------------------
+    $salesPendingWilayah = Sales::with('user')
+        ->whereNull('wilayah_id')
+        ->get();
+
     return view('dashboard.admin', compact(
         'data', 'ringkasan', 'bulan', 'tahun', 'grafik',
         'kunjungan_per_sales', 'penawaran_per_sales', 'so_per_sales', 'pembayaran_per_sales',
-        'totalTargetBulan', 'totalPenjualanBulan', 'pencapaianBulan'
+        'totalTargetBulan', 'totalPenjualanBulan', 'pencapaianBulan','salesPendingWilayah'
     ));
 }
 

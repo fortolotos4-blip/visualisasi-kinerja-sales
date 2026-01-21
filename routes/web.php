@@ -74,7 +74,7 @@ Route::prefix('produk')->middleware('auth')->group(function () {
 
 // Customer
 // Route bagian sales
-Route::prefix('customer')->middleware(['auth'])->group(function () {
+Route::prefix('customer')->middleware(['auth', 'sales.active'])->group(function () {
     Route::get('/', [CustomerController::class, 'index'])->name('customer.index');
     Route::get('/customer/create', [CustomerController::class, 'create'])->name('customer.create');
     Route::post('/customer/store', [CustomerController::class, 'store'])->name('customer.store');
@@ -147,34 +147,32 @@ Route::prefix('manajer')->middleware(['auth'])->group(function () {
 });
 
 // Kunjungan Sales
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'sales.active'])->group(function () {
     Route::get('/kunjungan', [KunjunganSalesController::class, 'index'])->name('kunjungan.index');
     Route::get('/kunjungan/create', [KunjunganSalesController::class, 'create'])->name('kunjungan.create');
     Route::post('/kunjungan', [KunjunganSalesController::class, 'store'])->name('kunjungan.store');
 });
 
 // Penawaran
-Route::middleware(['auth'])->group(function () {
-    // Route untuk Sales
+//Route untuk sales
+Route::middleware(['auth', 'sales.active'])->group(function () {
     Route::get('/penawaran', [PenawaranController::class, 'index'])->name('penawaran.sales.index');
     Route::get('/penawaran/create', [PenawaranController::class, 'create'])->name('penawaran.sales.create');
     Route::post('/penawaran', [PenawaranController::class, 'store'])->name('penawaran.store');
 
-    // 🔹 EDIT & UPDATE (sales)
     Route::get('/penawaran/{id}/edit', [PenawaranController::class, 'edit'])->name('penawaran.sales.edit');
     Route::put('/penawaran/{id}', [PenawaranController::class, 'update'])->name('penawaran.sales.update');
-    
-    // Sales konversi status penawaran apabila customer ok
+
     Route::post('/penawaran/{id}/convert', [PenawaranController::class, 'convert'])->name('penawaran.sales.convert');
     Route::post('/penawaran/{id}/reject', [PenawaranController::class, 'reject'])->name('penawaran.sales.reject');
 
     Route::get('/penawaran/{id}/cetak', [PenawaranController::class, 'cetakPerPenawaran'])
-    ->name('penawaran.sales.cetak');
+        ->name('penawaran.sales.cetak');
 
     Route::get('/penawaran/cetak-bulanan', [PenawaranController::class, 'cetakBulanan'])
-    ->name('penawaran.sales.cetak.bulanan');
-
+        ->name('penawaran.sales.cetak.bulanan');
 });
+
 
 // Route untuk Admin
 Route::prefix('admin')->middleware(['auth'])->group(function () {
@@ -192,12 +190,19 @@ Route::get('/get-harga-produk/{id}', function ($id) {
 });
 
 // Sales Order (SO)
-Route::middleware(['auth'])->group(function () {
+// Sales Order bagian Sales
+Route::middleware(['auth', 'sales.active'])->group(function () {
+    Route::get('/my-sales-order', [SalesOrderController::class, 'myOrders'])
+        ->name('sales-order.my');
 
-    // Route bagian sales
-    Route::get('/my-sales-order', [SalesOrderController::class, 'myOrders'])->name('sales-order.my');
-    Route::get('/sales-order/create', [SalesOrderController::class, 'create'])->name('sales-order.create');
-    Route::post('/sales-order', [SalesOrderController::class, 'store'])->name('sales-order.store');
+    Route::get('/sales-order/create', [SalesOrderController::class, 'create'])
+        ->name('sales-order.create');
+
+    Route::post('/sales-order', [SalesOrderController::class, 'store'])
+        ->name('sales-order.store');
+});
+
+Route::middleware(['auth'])->group(function () {
     // Route bagian admin
     Route::get('/sales-order', [SalesOrderController::class, 'index'])->name('sales-order.index');
 
@@ -207,7 +212,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Pembayaran
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'sales.active'])->group(function () {
     // Route untuk sales
     Route::get('/pembayaran', [PembayaranController::class, 'index'])->name('pembayaran.index');
     Route::get('/pembayaran/create', [PembayaranController::class, 'create'])->name('pembayaran.create');
@@ -233,7 +238,7 @@ Route::prefix('manajer')->middleware(['auth'])->group(function () {
 
 // Laporan
 // Route untuk Sales
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'sales.active'])->group(function () {
     Route::get('/laporan/sales', [LaporanController::class, 'laporanSales'])->name('laporan.sales');
 });
 // Route untuk Admin

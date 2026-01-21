@@ -3,6 +3,44 @@
 
 @section('content')
 <div class="container mt-4">
+        @if($salesPendingWilayah->count() > 0)
+    <div id="pendingWilayahModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-warning">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        Sales Menunggu Penetapan Wilayah
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Berikut sales yang <strong>belum memiliki wilayah</strong>:
+                    </p>
+
+                    <ul class="list-group mb-3">
+                        @foreach($salesPendingWilayah as $sales)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $sales->user->name ?? '-' }}
+                                <a href="{{ route('sales.edit', $sales->id) }}" class="btn btn-sm btn-primary">
+                                Atur Wilayah
+                            </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#pendingWilayahModal').modal('show');
+    });
+    </script>
+    @endif
+
     <h4>Dashboard Kinerja Sales - Bulan {{ $bulan }}/{{ $tahun }}</h4>
 
     {{-- Filter Bulan --}}
