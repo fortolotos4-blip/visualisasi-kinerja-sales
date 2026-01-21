@@ -106,6 +106,13 @@ Route::prefix('sales')->middleware('auth')->group(function () {
     Route::put('/{id}', [SalesController::class, 'update'])->name('sales.update');
     Route::delete('/{id}', [SalesController::class, 'destroy'])->name('sales.destroy');
 });
+
+//Status Sales
+Route::patch('/sales/{id}/toggle-status', 
+    [SalesController::class, 'toggleStatus']
+)->name('sales.toggle-status');
+
+
 //Manager
 Route::prefix('manager')->middleware(['auth' /*, 'role:manager' */])->group(function () {
     Route::get('/sales', [SalesManagerController::class, 'index'])->name('master.sales.manager.index');

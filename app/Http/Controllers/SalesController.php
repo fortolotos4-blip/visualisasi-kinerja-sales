@@ -27,6 +27,21 @@ class SalesController extends Controller
     return view('master.sales.index', compact('sales'));
 }
 
+    // Status Sales
+    public function toggleStatus($id)
+    {
+        $sales = Sales::findOrFail($id);
+
+        $sales->update([
+            'is_active' => !$sales->is_active
+        ]);
+
+        $status = $sales->is_active ? 'diaktifkan' : 'dinonaktifkan';
+
+        return redirect()->route('sales.index')
+            ->with('success', "Sales berhasil {$status}.");
+    }
+
     // Form untuk menambahkan sales baru
     public function create()
     {

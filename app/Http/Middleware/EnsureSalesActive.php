@@ -3,32 +3,33 @@
 namespace App\Http\Middleware;
 
 use Closure;
-
 use Illuminate\Support\Facades\Auth;
-
 
 class EnsureSalesActive
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle($request, Closure $next)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    if ($user->jabatan === 'sales') {
-        $sales = $user->sales;
-        if ($sales && is_null($sales->wilayah_id)) {
-            return redirect('/dashboard/sales')
-                ->with('error', 'Akun Anda belum dikonfigurasi oleh admin.');
+        // Hanya berlaku untuk role sales
+        if ($user && $user->jabatan === 'sales') {
+
+            $sales = $user->sales;
+
+            // ❌ Tidak punya relasi sales atau dinonaktifkan
+            if (!$sales || !$sales->is_active) {
+                Auth::logout();
+                return redirect('/login')
+                    ->withErrors(['Akun Anda sudah dinonaktifkan.']);
+            }
+
+            // ⚠️ Aktif tapi belum punya wilayah
+            if (is_null($sales->wilayah_id)) {
+                return redirect()->route('dashboard.sales')
+                    ->with('error', 'Akun Anda belum dikonfigurasi oleh admin.');
+            }
         }
+
+        return $next($request);
     }
-
-    return $next($request);
-}
-
 }

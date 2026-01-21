@@ -25,6 +25,7 @@
             <th>Nama Sales</th>
             <th>Wilayah</th>
             <th>Target Penjualan</th>
+            <th>Status</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -36,24 +37,38 @@
                 <td>{{ $s->nama_sales }}</td>
                 <td>{{ $s->wilayah->nama_wilayah ?? '-' }}</td> {{-- akses relasi --}}
                 <td>{{ number_format($s->target_penjualan, 0, ',', '.') }}</td>
-
-                {{-- ⬇ Tambahkan tombol Edit dan Delete di sini --}}
+                <td>
+                    @if($s->is_active)
+                        <span class="badge badge-success">Aktif</span>
+                    @else
+                        <span class="badge badge-secondary">Nonaktif</span>
+                    @endif
+                </td>
+                {{-- ⬇ Tambahkan tombol Edit dan Non Aktif di sini --}}
         <td>
+            <a href="{{ route('sales.edit', ['id' => $s->id, 'page' => request('page', 1)]) }}"
+            class="btn btn-sm btn-warning">
+                Edit
+            </a>
 
-            <a href="{{ route('sales.edit', ['id' => $s->id, 'page' => request('page', 1)]) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form id="form-status-{{ $s->id }}"
+                action="{{ route('sales.toggle-status', $s->id) }}"
+                method="POST"
+                style="display:inline;">
+                @csrf
+                @method('PATCH')
 
-            <form id="form-hapus-{{ $s->id }}" action="{{ route('sales.destroy', $s->id) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('DELETE')
-            <input type="hidden" name="page" value="{{ request('page') }}">
-            <button type="button" class="btn btn-sm btn-danger" onclick="hapus({{ $s->id }})">Hapus</button>
+                <button type="button"
+                    class="btn btn-sm {{ $s->is_active ? 'btn-danger' : 'btn-success' }}"
+                    onclick="toggleStatus({{ $s->id }}, '{{ $s->is_active ? 'nonaktifkan' : 'aktifkan' }}')">
+                    {{ $s->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                </button>
             </form>
-
         </td>
             </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">Tidak ada data sales.</td>
+                    <td colspan="7" class="text-center">Tidak ada data sales.</td>
                 </tr>
         @endforelse
     </tbody>
@@ -65,19 +80,21 @@
 </div>
 @endsection
 <script>
-function hapus(id) {
+function toggleStatus(id, action) {
     Swal.fire({
         title: 'Apakah Anda yakin?',
-        text: "Data Sales yang dihapus tidak bisa dikembalikan!",
+        text: action === 'nonaktifkan'
+            ? 'Sales ini akan dinonaktifkan dan tidak bisa login.'
+            : 'Sales ini akan diaktifkan kembali.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
+        confirmButtonColor: action === 'nonaktifkan' ? '#d33' : '#28a745',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, hapus',
+        confirmButtonText: 'Ya, ' + action,
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('form-hapus-' + id).submit();
+            document.getElementById('form-status-' + id).submit();
         }
     });
 }

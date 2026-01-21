@@ -17,7 +17,8 @@ class Sales extends Model
         'user_id',
         'nama_sales',
         'wilayah_id',
-        'target_penjualan'
+        'target_penjualan',
+        'is_active'
     ];
 
     public function wilayah()
