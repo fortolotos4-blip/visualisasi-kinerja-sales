@@ -201,9 +201,9 @@ class SalesManagerController extends Controller
         if (Schema::hasTable('sales_orders') && Schema::hasTable('sales_order_details')) {
             $rows = DB::table('sales_order_details as sod')
                 ->join('sales_orders as so', 'sod.sales_order_id', '=', 'so.id')
-                ->select(DB::raw("DATE_FORMAT(so.tanggal, '%Y-%m') as ym"), DB::raw("SUM(sod.qty * sod.harga_satuan) as total"))
+                ->select(DB::raw("TO_CHAR(so.tanggal, 'YYYY-MM') as ym"), DB::raw("SUM(sod.qty * sod.harga_satuan) as total"))
                 ->where('so.sales_id', $sales->id)
-                ->whereIn(DB::raw("DATE_FORMAT(so.tanggal, '%Y-%m')"), $months)
+                ->whereIn(DB::raw("TO_CHAR(so.tanggal, 'YYYY-MM')"), $months)
                 ->groupBy('ym')
                 ->get();
 
@@ -213,9 +213,9 @@ class SalesManagerController extends Controller
         } else {
             // fallback: hitung dari header jika ada field total_harga
             $rows = DB::table('sales_orders')
-                ->select(DB::raw("DATE_FORMAT(tanggal, '%Y-%m') as ym"), DB::raw("SUM(IFNULL(total_harga,0)) as total"))
+                ->select(DB::raw("TO_CHAR(tanggal, 'YYYY-MM') as ym"), DB::raw("SUM(COALESCE(total_harga,0)) as total"))
                 ->where('sales_id', $sales->id)
-                ->whereIn(DB::raw("DATE_FORMAT(tanggal, '%Y-%m')"), $months)
+                ->whereIn(DB::raw("TO_CHAR(tanggal, 'YYYY-MM')"), $months)
                 ->groupBy('ym')
                 ->get();
             foreach ($rows as $r) {
@@ -226,9 +226,9 @@ class SalesManagerController extends Controller
         // Ambil penawaran per bulan (jika ada)
         if (Schema::hasTable('penawaran')) {
             $pen = DB::table('penawaran')
-                ->select(DB::raw("DATE_FORMAT(tanggal_penawaran, '%Y-%m') as ym"), DB::raw("COUNT(*) as c"))
+                ->select(DB::raw("TO_CHAR(tanggal_penawaran, 'YYYY-MM') as ym"), DB::raw("COUNT(*) as c"))
                 ->where('sales_id', $sales->id)
-                ->whereIn(DB::raw("DATE_FORMAT(tanggal_penawaran, '%Y-%m')"), $months)
+                ->whereIn(DB::raw("TO_CHAR(tanggal_penawaran, 'YYYY-MM')"), $months)
                 ->groupBy('ym')
                 ->get();
             foreach ($pen as $r) if (isset($monthly[$r->ym])) $monthly[$r->ym]['penawaran'] = (int)$r->c;
@@ -237,7 +237,7 @@ class SalesManagerController extends Controller
         // ambil target bila ada (jangan paksa target menjadi syarat di sini — tapi nanti kita butuhkan untuk validasi)
         $targetRows = DB::table('target_sales')
             ->where('sales_id', $sales->id)
-            ->whereIn(DB::raw("CONCAT(tahun,'-',LPAD(bulan,2,'0'))"), $months)
+            ->whereIn(DB::raw("(tahun || '-' || LPAD(bulan::text, 2, '0'))"), $months)
             ->get();
 
         // cek apakah target_sales punya kolom untuk target penawaran/kunjungan
