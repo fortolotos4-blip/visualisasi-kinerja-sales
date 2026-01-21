@@ -36,10 +36,16 @@ class SalesManagerController extends Controller
         }
 
         $paginator = $query
-        ->orderByRaw("CAST(REGEXP_REPLACE(nama_sales, '[^0-9]', '') AS UNSIGNED) ASC")
+        ->orderByRaw("
+            COALESCE(
+                NULLIF(REGEXP_REPLACE(nama_sales, '[^0-9]', '', 'g'), '')::INTEGER,
+                0
+            ) ASC
+        ")
         ->orderBy('nama_sales', 'ASC')
-        ->paginate(3)
+        ->paginate(5)
         ->withQueryString();
+
 
 
         // transformasi: untuk tiap sales hitung eligible berdasarkan 12 bulan terakhir
