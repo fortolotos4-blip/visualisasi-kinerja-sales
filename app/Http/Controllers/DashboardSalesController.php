@@ -86,19 +86,21 @@ class DashboardSalesController extends Controller
 
     // SO lunas: pakai total_harga & pembayaran diterima
     $ringkasan['so_lunas'] = DB::table('sales_orders')
-        ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
-        ->select(
-            'sales_orders.id',
-            'sales_orders.total_harga as total_tagihan',
-            DB::raw("COALESCE(SUM(CASE WHEN pembayaran.status = 'diterima' THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar")
-        )
-        ->where('sales_orders.sales_id', $sales->id)
-        ->whereMonth('sales_orders.tanggal', $bulan)
-        ->whereYear('sales_orders.tanggal', $tahun)
-        ->groupBy('sales_orders.id','sales_orders.total_harga')
-        ->havingRaw('total_bayar >= total_tagihan')
-        ->get()
-        ->count();
+    ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
+    ->where('sales_orders.sales_id', $sales->id)
+    ->whereMonth('sales_orders.tanggal', $bulan)
+    ->whereYear('sales_orders.tanggal', $tahun)
+    ->groupBy('sales_orders.id', 'sales_orders.total_harga')
+    ->havingRaw("
+        COALESCE(SUM(
+            CASE 
+                WHEN pembayaran.status = 'diterima' 
+                THEN pembayaran.jumlah 
+                ELSE 0 
+            END
+        ), 0) >= sales_orders.total_harga
+    ")
+    ->count();
 
     // ---------------- Kontribusi & skor ----------------
     $kontribusi = KontribusiParameter::where('periode_bulan', $bulan)
@@ -181,19 +183,21 @@ class DashboardSalesController extends Controller
         }
 
         $piutangBelumLunas = DB::table('sales_orders')
-            ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
-            ->select(
-                'sales_orders.id',
-                'sales_orders.total_harga as total_tagihan',
-                DB::raw("COALESCE(SUM(CASE WHEN pembayaran.status = 'diterima' THEN pembayaran.jumlah ELSE 0 END),0) as total_bayar")
-            )
-            ->where('sales_orders.sales_id', $sales->id)
-            ->whereMonth('sales_orders.tanggal', $bulan)
-            ->whereYear('sales_orders.tanggal', $tahun)
-            ->groupBy('sales_orders.id', 'sales_orders.total_harga')
-            ->havingRaw('total_bayar < total_tagihan')
-            ->get()
-            ->count();
+        ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
+        ->where('sales_orders.sales_id', $sales->id)
+        ->whereMonth('sales_orders.tanggal', $bulan)
+        ->whereYear('sales_orders.tanggal', $tahun)
+        ->groupBy('sales_orders.id', 'sales_orders.total_harga')
+        ->havingRaw("
+            COALESCE(SUM(
+                CASE 
+                    WHEN pembayaran.status = 'diterima' 
+                    THEN pembayaran.jumlah 
+                    ELSE 0 
+                END
+            ), 0) < sales_orders.total_harga
+        ")
+        ->count();
 
         if ($piutangBelumLunas > 0) {
             $isWarning = true;
