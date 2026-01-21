@@ -50,13 +50,19 @@ class TargetSalesController extends Controller
     }
 
     public function create()
-{
-    // ambil semua level default
-    $levels = LevelTarget::orderByRaw("FIELD(level, 'Trainee', 'Junior', 'Senior')")->get();
+    {
+        $levels = LevelTarget::orderByRaw("
+            CASE level
+                WHEN 'Trainee' THEN 1
+                WHEN 'Junior'  THEN 2
+                WHEN 'Senior'  THEN 3
+                ELSE 99
+            END
+        ")->get();
 
+        return view('target_sales.create', compact('levels'));
+    }
 
-    return view('target_sales.create', compact('levels'));
-}
 
 public function store(Request $request)
 {
