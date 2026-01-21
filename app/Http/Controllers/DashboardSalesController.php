@@ -26,6 +26,8 @@ class DashboardSalesController extends Controller
         abort(403, 'Akun ini tidak terhubung dengan data sales.');
     }
 
+        $isPendingSales = is_null($sales->wilayah_id);
+
     // === TOTAL PENJUALAN: pakai header sales_orders.total_harga ===
     $totalPenjualan = SalesOrder::where('sales_id', $sales->id)
         ->whereMonth('tanggal', $bulan)
@@ -289,7 +291,7 @@ class DashboardSalesController extends Controller
         'isWarning', 'warningMessages', 'kontribusi',
         'bulanLabels','dataTargetBulanan','dataRealisasiBulanan',
         'dataKunjunganBulanan','dataPenawaranBulanan','dataSOBulanan',
-        'total_skor'
+        'total_skor', 'isPendingSales'
     ));
 }
 

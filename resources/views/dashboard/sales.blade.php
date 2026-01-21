@@ -4,6 +4,38 @@
 @section('content')
 <div class="container mt-4">
     {{-- Modal Peringatan --}}
+    @if($isPendingSales)
+    <div id="pendingSalesModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-info">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Akun Menunggu Konfirmasi</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-2">
+                        Akun Anda <strong>belum memiliki wilayah penugasan</strong>.
+                    </p>
+                    <p class="text-muted mb-0">
+                        Silakan menunggu admin untuk melakukan konfigurasi wilayah.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    
+    @if($isPendingSales)
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#pendingSalesModal').modal('show');
+    });
+    </script>
+    @endif
+
+    {{-- Modal Peringatan --}}
     @if($isWarning && !empty($warningMessages))
     <div id="warningPopup" class="modal fade" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">

@@ -34,13 +34,41 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('penjualan.manager') }}">Penjualan</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('laporan.manager') }}">Laporan</a></li>
             @elseif(Auth::user()->jabatan === 'sales')
-                <li class="nav-item"><a class="nav-link" href="{{ route('dashboard.sales') }}">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('customer.index') }}">Customer</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('penawaran.sales.index') }}">Penawaran</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('kunjungan.index') }}">Kunjungan</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('sales-order.my') }}">Sales Order</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('pembayaran.index') }}">Pembayaran</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('laporan.sales') }}">Laporan</a></li>
+            @php
+            $sales = Auth::user()->sales ?? null;
+            $isPendingSales = $sales && is_null($sales->wilayah_id);
+            @endphp
+
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('customer.index') }}">
+                Customer
+            </a></li>
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('penawaran.sales.index') }}">
+                Penawaran
+            </a></li>
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('kunjungan.index') }}">
+                Kunjungan
+            </a></li>
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('sales-order.my') }}">
+                Sales Order
+            </a></li>
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('pembayaran.index') }}">
+                Pembayaran
+            </a></li>
+            <li class="nav-item">
+            <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
+            href="{{ $isPendingSales ? '#' : route('laporan.sales') }}">
+                Laporan
+            </a></li>
             @endif
         </ul>
 
