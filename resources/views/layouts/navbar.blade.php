@@ -38,7 +38,7 @@
             $sales = Auth::user()->sales ?? null;
             $isPendingSales = $sales && is_null($sales->wilayah_id);
             @endphp
-
+            <li class="nav-item"><a class="nav-link" href="{{ route('dashboard.sales') }}">Dashboard</a></li>
             <li class="nav-item">
             <a class="nav-link {{ $isPendingSales ? 'disabled text-muted pe-none' : '' }}"
             href="{{ $isPendingSales ? '#' : route('customer.index') }}">
