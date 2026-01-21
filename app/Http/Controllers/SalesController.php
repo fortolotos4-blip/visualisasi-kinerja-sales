@@ -10,14 +10,19 @@ class SalesController extends Controller
     // Menampilkan daftar sales dengan pagination dan pencarian
     public function index(Request $request)
 {
-    $query = Sales::query('wilayah');
+    $query = Sales::with('wilayah'); // ✅ INI YANG BENAR
 
-    if ($request->has('search') && $request->search != '') {
-        $query->where('nama_sales', 'like', '%' . $request->search . '%');
-        $query->orWhere('kode_sales', 'like', '%' . $request->search . '%');
+    if ($request->filled('search')) {
+        $query->where(function ($q) use ($request) {
+            $q->where('nama_sales', 'like', '%' . $request->search . '%')
+              ->orWhere('kode_sales', 'like', '%' . $request->search . '%');
+        });
     }
 
-    $sales = $query->orderBy('created_at', 'desc')->paginate(5)->withQueryString();
+    $sales = $query
+        ->orderBy('created_at', 'desc')
+        ->paginate(5)
+        ->withQueryString();
 
     return view('master.sales.index', compact('sales'));
 }
