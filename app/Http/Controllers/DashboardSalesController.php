@@ -161,49 +161,53 @@ class DashboardSalesController extends Controller
         ? round($pencapaian_penawaran * ($bobot_penawaran / 100), 2)
         : 0;
 
-    // ---------------- Warning piutang ----------------
+    // ---------------- Warning piutang (HANYA JIKA SALES AKTIF OPERASIONAL) ----------------
     $isWarning = false;
     $warningMessages = [];
 
-    $today = now();
-    $lastDayOfMonth = now()->endOfMonth();
-    $daysRemaining = $today->diffInDays($lastDayOfMonth);
+    if (!$isPendingSales) {
 
-    if ((int)$bulan === (int)date('m') && (int)$tahun === (int)date('Y') && $daysRemaining <= 10) {
-        if ($pencapaian < 80) {
-            $isWarning = true;
-            $warningMessages[] = "Pencapaian target penjualan masih di bawah 80%.";
-        }
+        $today = now();
+        $lastDayOfMonth = now()->endOfMonth();
+        $daysRemaining = $today->diffInDays($lastDayOfMonth);
 
-        $ratioKunjunganPenawaran = $ringkasan['kunjungan'] > 0
-            ? ($ringkasan['penawaran'] / $ringkasan['kunjungan']) * 100
-            : 0;
+        if ((int)$bulan === (int)date('m') && (int)$tahun === (int)date('Y') && $daysRemaining <= 10) {
 
-        if ($ratioKunjunganPenawaran < 10) {
-            $isWarning = true;
-            $warningMessages[] = "Rasio kunjungan ke penawaran masih di bawah 10%.";
-        }
+            if ($pencapaian < 80) {
+                $isWarning = true;
+                $warningMessages[] = "Pencapaian target penjualan masih di bawah 80%.";
+            }
 
-        $piutangBelumLunas = DB::table('sales_orders')
-        ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
-        ->where('sales_orders.sales_id', $sales->id)
-        ->whereMonth('sales_orders.tanggal', $bulan)
-        ->whereYear('sales_orders.tanggal', $tahun)
-        ->groupBy('sales_orders.id', 'sales_orders.total_harga')
-        ->havingRaw("
-            COALESCE(SUM(
-                CASE 
-                    WHEN pembayaran.status = 'diterima' 
-                    THEN pembayaran.jumlah 
-                    ELSE 0 
-                END
-            ), 0) < sales_orders.total_harga
-        ")
-        ->count();
+            $ratioKunjunganPenawaran = $ringkasan['kunjungan'] > 0
+                ? ($ringkasan['penawaran'] / $ringkasan['kunjungan']) * 100
+                : 0;
 
-        if ($piutangBelumLunas > 0) {
-            $isWarning = true;
-            $warningMessages[] = "Masih ada pembayaran menunggak yang belum dilunasi.";
+            if ($ratioKunjunganPenawaran < 10) {
+                $isWarning = true;
+                $warningMessages[] = "Rasio kunjungan ke penawaran masih di bawah 10%.";
+            }
+
+            $piutangBelumLunas = DB::table('sales_orders')
+                ->leftJoin('pembayaran', 'sales_orders.id', '=', 'pembayaran.sales_order_id')
+                ->where('sales_orders.sales_id', $sales->id)
+                ->whereMonth('sales_orders.tanggal', $bulan)
+                ->whereYear('sales_orders.tanggal', $tahun)
+                ->groupBy('sales_orders.id', 'sales_orders.total_harga')
+                ->havingRaw("
+                    COALESCE(SUM(
+                        CASE 
+                            WHEN pembayaran.status = 'diterima' 
+                            THEN pembayaran.jumlah 
+                            ELSE 0 
+                        END
+                    ), 0) < sales_orders.total_harga
+                ")
+                ->count();
+
+            if ($piutangBelumLunas > 0) {
+                $isWarning = true;
+                $warningMessages[] = "Masih ada pembayaran menunggak yang belum dilunasi.";
+            }
         }
     }
 

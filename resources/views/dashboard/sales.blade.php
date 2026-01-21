@@ -26,7 +26,7 @@
         </div>
     </div>
     @endif
-    
+
     @if($isPendingSales)
     <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -386,7 +386,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {{-- Modal Warning sekali per hari --}}
-@if($isWarning && !empty($warningMessages))
+@if(!$isPendingSales && $isWarning && !empty($warningMessages))
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const todayKey = 'salesWarningShown_' + new Date().toISOString().slice(0,10);
