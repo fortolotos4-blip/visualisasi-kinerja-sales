@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+.login-logo {
+    max-height: 70px;
+    width: auto;
+}
+@media (max-width: 576px) {
+    .login-logo {
+        max-height: 55px;
+    }
+}
+</style>
+
 </head>
 
 <body class="bg-light d-flex align-items-center" style="min-height:100vh">
@@ -16,7 +28,7 @@
             <div class="text-center mb-3">
                 <img src="{{ asset('images/chopindo.png') }}"
                      alt="Logo"
-                     class="img-fluid"
+                     class="login-logo"
                      style="max-height:100px">
             </div>
 
