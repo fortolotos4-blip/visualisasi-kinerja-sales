@@ -132,6 +132,10 @@ public function store(Request $request)
 {
     $sales = Sales::where('user_id', Auth::id())->first();
 
+    if (!$sales) {
+        return back()->withErrors('Data sales tidak ditemukan.')->withInput();
+    }
+
     $request->validate([
         'customer_id' => 'required|exists:customers,id',
         'tanggal_penawaran' => 'required|date',
@@ -223,10 +227,15 @@ public function store(Request $request)
 
         return redirect()->route('penawaran.sales.index')->with('success', 'Penawaran berhasil diajukan.');
     } catch (\Exception $e) {
+    DB::rollBack();
+    dd($e->getMessage(), $e->getTraceAsString());
+}
+
+    /*catch (\Exception $e) {
         DB::rollBack();
         \Log::error('Error store penawaran: ' . $e->getMessage());
         return back()->withErrors('Terjadi kesalahan saat menyimpan penawaran.')->withInput();
-    }
+    }*/
 }
 
 
