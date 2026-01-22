@@ -50,92 +50,77 @@
                     </tr>
                 </thead>
                 <tbody>
-                @forelse($sales as $s)
-                    @php
-                        $ts = $targets->get($s->id);
+@forelse($sales as $s)
+@php
+    $ts = $targets->get($s->id);
+    $lt = $s->level && isset($levels[$s->level]) ? $levels[$s->level] : null;
 
-                        if ($ts) {
-                            $effective = $ts->target;
-                            $source = $ts->source;
-                        } else {
-                            $lt = isset($levels[$s->level]) ? $levels[$s->level] : null;
-                            $effective = $lt ? $lt->amount : 0;
-                            $source = 'default';
-                        }
-                    @endphp
+    $effective = $ts ? $ts->target : ($lt->amount ?? 0);
+    $source = $ts->source ?? 'default';
+@endphp
 
-                    <tr>
-                    <form action="{{ route('target_sales.update', $s->id) }}"
-                          method="POST"
-                          class="form-update-target"
-                          data-sales="{{ $s->nama_sales }}"
-                          data-old-level="{{ $s->level ?? '' }}">
-                        @csrf
+<tr>
+    <td>{{ ($sales->currentPage()-1)*$sales->perPage() + $loop->iteration }}</td>
+    <td>{{ $s->nama_sales }}</td>
 
-                        <input type="hidden" name="tahun" value="{{ $year }}">
-                        <input type="hidden" name="bulan" value="{{ $month }}">
-                        <input type="hidden" name="level" class="hidden-level">
+    {{-- LEVEL + TARGET FORM --}}
+    <td colspan="2">
+        <form action="{{ route('target_sales.update', $s->id) }}"
+              method="POST"
+              class="form-update-target d-flex align-items-center"
+              data-sales="{{ $s->nama_sales }}"
+              data-old-level="{{ $s->level ?? '' }}">
+            @csrf
 
-                        <td>
-                            {{ ($sales->currentPage()-1)*$sales->perPage() + $loop->iteration }}
-                        </td>
+            <input type="hidden" name="tahun" value="{{ $year }}">
+            <input type="hidden" name="bulan" value="{{ $month }}">
+            <input type="hidden" name="level" class="hidden-level">
 
-                        <td>{{ $s->nama_sales }}</td>
+            <select class="form-control form-control-sm level-select mr-2" required>
+                <option value="">-- Level --</option>
+                @foreach($levels as $lvl)
+                    <option value="{{ $lvl->level }}"
+                        {{ $s->level === $lvl->level ? 'selected' : '' }}>
+                        {{ $lvl->level }}
+                    </option>
+                @endforeach
+            </select>
 
-                        {{-- LEVEL --}}
-                        <td>
-                            <select class="form-control form-control-sm level-select" required>
-                                <option value="">-- Pilih Level --</option>
-                                @foreach($levels as $lvl)
-                                    <option value="{{ $lvl->level }}"
-                                        {{ $s->level === $lvl->level ? 'selected' : '' }}>
-                                        {{ $lvl->level }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
+            <input type="text"
+                   name="amount"
+                   class="form-control form-control-sm money-input mr-2"
+                   style="width:140px"
+                   value="{{ number_format($effective,0,',','.') }}"
+                   required>
 
-                        {{-- TARGET --}}
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <input type="text"
-                                       name="amount"
-                                       class="form-control form-control-sm money-input"
-                                       style="width:140px"
-                                       value="{{ number_format($effective,0,',','.') }}"
-                                       required>
-                                <button class="btn btn-sm btn-primary ml-2">
-                                    Simpan
-                                </button>
-                            </div>
-                        </td>
+            <button class="btn btn-sm btn-primary">Simpan</button>
+        </form>
+    </td>
 
-                        {{-- AKSI --}}
-                        <td>
-                            @if($source === 'override')
-                                <form action="{{ route('target_sales.reset', $s->id) }}"
-                                      method="POST"
-                                      class="form-batal d-inline"
-                                      data-nama="{{ $s->nama_sales }}">
-                                    @csrf
-                                    <input type="hidden" name="tahun" value="{{ $year }}">
-                                    <input type="hidden" name="bulan" value="{{ $month }}">
-                                    <button class="btn btn-sm btn-outline-danger">
-                                        Batal
-                                    </button>
-                                </form>
-                            @else
-                                <span class="text-muted">-</span>
-                            @endif
-                        </td>
-                    </form>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center">Belum ada sales</td>
-                    </tr>
-                @endforelse
-                </tbody>
+    {{-- AKSI --}}
+    <td>
+        @if($source === 'override')
+        <form action="{{ route('target_sales.reset', $s->id) }}"
+              method="POST"
+              class="form-batal"
+              data-nama="{{ $s->nama_sales }}">
+            @csrf
+            <input type="hidden" name="tahun" value="{{ $year }}">
+            <input type="hidden" name="bulan" value="{{ $month }}">
+            <button class="btn btn-sm btn-outline-danger">Batal</button>
+        </form>
+        @else
+            <span class="text-muted">-</span>
+        @endif
+    </td>
+</tr>
+@empty
+<tr>
+    <td colspan="5" class="text-center">Belum ada sales</td>
+</tr>
+@endforelse
+</tbody>
+
             </table>
         </div>
     </div>
