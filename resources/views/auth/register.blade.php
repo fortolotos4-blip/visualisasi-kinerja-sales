@@ -39,6 +39,7 @@
                         <option value="">-- Pilih Jabatan --</option>
                         <option value="sales">Sales</option>
                         <option value="manajer">Manajer</option>
+                        <option value="admin">Admin</option>
                         {{-- Admin sebaiknya tidak publik --}}
                     </select>
                 </div>
