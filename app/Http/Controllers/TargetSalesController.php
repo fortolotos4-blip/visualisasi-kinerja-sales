@@ -125,67 +125,58 @@ public function store(Request $request)
         'tahun' => 'required|integer|min:2020',
         'bulan' => 'required|integer|min:1|max:12',
         'amount' => 'required|numeric|min:0',
-        'level'  => 'required|string'
+        'level'  => 'required|exists:level_targets,level'
     ]);
 
-    $tahun  = (int) $request->tahun;
-    $bulan  = (int) $request->bulan;
-    $amount = (float) $request->amount;
-    $newLevel = $request->level;
+    DB::transaction(function () use ($request, $salesId) {
 
-    DB::transaction(function () use ($salesId, $tahun, $bulan, $amount, $newLevel) {
+        Sales::where('id', $salesId)->update([
+            'level' => $request->level
+        ]);
 
-        $sales = Sales::lockForUpdate()->findOrFail($salesId);
-
-        // === 1. Jika level berubah → update level sales ===
-        if ($sales->level !== $newLevel) {
-            $sales->update(['level' => $newLevel]);
-        }
-
-        // === 2. Simpan / override target ===
         TargetSales::updateOrCreate(
             [
                 'sales_id' => $salesId,
-                'tahun'    => $tahun,
-                'bulan'    => $bulan,
+                'tahun' => $request->tahun,
+                'bulan' => $request->bulan
             ],
             [
-                'target'          => $amount,
-                'source'          => 'override',
-                'overridden_by'   => auth()->id(),
-                'overridden_at'   => now(),
-                'level_when_set'  => $newLevel,
-                'status'          => 'Aktif',
+                'target' => $request->amount,
+                'source' => 'override',
+                'level_when_set' => $request->level,
+                'overridden_by' => auth()->id(),
+                'overridden_at' => now(),
+                'status' => 'Aktif'
             ]
         );
     });
 
-    return back()->with('success', 'Level dan target sales berhasil disimpan.');
+    return back()->with('success','Target & level berhasil disimpan.');
 }
 
 
+
+
     public function reset(Request $request, $salesId)
-    {
-        $request->validate([
-            'tahun' => 'required|integer|min:2020',
-            'bulan' => 'required|integer|min:1|max:12',
+{
+    $request->validate([
+        'tahun' => 'required|integer|min:2020',
+        'bulan' => 'required|integer|min:1|max:12',
+    ]);
+
+    TargetSales::where('sales_id', $salesId)
+        ->where('tahun', $request->tahun)
+        ->where('bulan', $request->bulan)
+        ->where('source', 'override')
+        ->update([
+            'source' => 'default',
+            'overridden_by' => null,
+            'overridden_at' => null
         ]);
 
-        $tahun = (int)$request->tahun;
-        $bulan = (int)$request->bulan;
+    return back()->with('success', 'Target dikembalikan ke default.');
+}
 
-        $q = TargetSales::where('sales_id', $salesId)
-            ->where('tahun', $tahun)
-            ->where('bulan', $bulan);
-
-        if (Schema::hasColumn('target_sales','source')) {
-            $q->where('source','override')->delete();
-        } else {
-            $q->delete();
-        }
-
-        return back()->with('success', 'Target dibatalkan. Nilai target kembali ke default.');
-    }
 
     public function batal($tahun)
     {
