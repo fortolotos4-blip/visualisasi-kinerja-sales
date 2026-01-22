@@ -226,16 +226,16 @@ public function store(Request $request)
         DB::commit();
 
         return redirect()->route('penawaran.sales.index')->with('success', 'Penawaran berhasil diajukan.');
-    } /*catch (\Exception $e) {
+    } catch (\Exception $e) {
     DB::rollBack();
     dd($e->getMessage(), $e->getTraceAsString());
-}*/
+}
 
-    catch (\Exception $e) {
+    /*catch (\Exception $e) {
         DB::rollBack();
         \Log::error('Error store penawaran: ' . $e->getMessage());
         return back()->withErrors('Terjadi kesalahan saat menyimpan penawaran.')->withInput();
-    }
+    }*/
 }
 
 
