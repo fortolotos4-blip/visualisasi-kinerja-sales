@@ -17,7 +17,7 @@
                 <img src="{{ asset('images/chopindo.png') }}"
                      alt="Logo"
                      class="img-fluid"
-                     style="max-height:120px">
+                     style="max-height:100px">
             </div>
 
             <h5 class="text-center mb-4 font-weight-bold">Login</h5>
