@@ -136,12 +136,26 @@
 
 <script>
 // format rupiah
-document.querySelectorAll('.money-input').forEach(i=>{
-    i.addEventListener('input',()=>{
-        i.value=i.value.replace(/\D/g,'');
-        i.value=new Intl.NumberFormat('id-ID').format(i.value);
+document.querySelectorAll('.money-input').forEach(input => {
+
+    // hanya angka saat mengetik
+    input.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g,'');
+    });
+
+    // format saat keluar input
+    input.addEventListener('blur', function () {
+        if(this.value){
+            this.value = new Intl.NumberFormat('id-ID').format(this.value);
+        }
+    });
+
+    // sebelum submit → kirim angka murni
+    input.closest('form').addEventListener('submit', function () {
+        input.value = input.value.replace(/\D/g,'');
     });
 });
+
 
 // submit + konfirmasi level
 document.querySelectorAll('.form-update-target').forEach(f=>{
