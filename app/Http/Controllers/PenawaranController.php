@@ -90,7 +90,7 @@ class PenawaranController extends Controller
                 $query->where('customer_id', $request->customer_id);
             }
 
-            $penawaran = $query->orderBy('created_at', 'desc')->paginate(2);
+            $penawaran = $query->orderBy('created_at', 'desc')->paginate(5);
 
             return view('penawaran.sales.index', compact('penawaran', 'customers'));
         }
@@ -456,7 +456,7 @@ public function update(Request $request, $id)
             $query->where('sales_id', $request->sales_id);
         }
 
-        $penawaran = $query->orderBy('created_at','desc')->paginate(3);
+        $penawaran = $query->orderBy('created_at','desc')->paginate(5);
 
         $sales = Sales::with('user')->get();
         return view('penawaran.index', compact('penawaran', 'sales'));

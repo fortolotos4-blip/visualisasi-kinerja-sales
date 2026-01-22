@@ -18,7 +18,7 @@ class WilayahController extends Controller
         $query->orWhere('kode_wilayah', 'like', '%' . $request->search . '%');
     }
 
-    $wilayah = $query->orderBy('created_at','desc')->paginate(3)->withQueryString();
+    $wilayah = $query->orderBy('created_at','desc')->paginate(5)->withQueryString();
 
 
 

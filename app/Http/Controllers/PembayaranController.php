@@ -49,7 +49,7 @@ class PembayaranController extends Controller
     }
 
     $pembayaran = $query->orderBy('created_at', 'desc')
-                        ->paginate(3)
+                        ->paginate(5)
                         ->appends($request->all());
 
     return view('pembayaran.index', compact('pembayaran', 'customers'));
@@ -123,7 +123,7 @@ class PembayaranController extends Controller
     {
     $pembayaran = Pembayaran::with(['salesOrder', 'salesOrder.sales', 'salesOrder.customer'])
     ->orderBy('created_at', 'desc')
-    ->paginate(3);
+    ->paginate(5);
     return view('pembayaran.admin.index', compact('pembayaran'));
     }
 

@@ -24,7 +24,7 @@ class CustomerController extends Controller
         $query->where('nama_customer', 'like', '%' . $request->search . '%');
     }
 
-    $customers = $query->orderBy('created_at', 'desc')->paginate(03)->withQueryString();
+    $customers = $query->orderBy('created_at', 'desc')->paginate(5)->withQueryString();
 
     return view('master.customer.index', compact('customers'));
     }
@@ -119,7 +119,7 @@ class CustomerController extends Controller
 
         $customers = $query
             ->orderBy('created_at', 'desc')
-            ->paginate(10)               // boleh 5 / 10 sesuai selera
+            ->paginate(5)               // boleh 5 / 10 sesuai selera
             ->withQueryString();
 
         // data untuk dropdown sales

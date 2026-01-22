@@ -45,72 +45,78 @@
                         <th style="width:160px">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                @forelse($sales as $i => $s)
-                    @php
-                        // pastikan $targets/$levels adalah Collection
-                        $targetsColl = is_array($targets) ? collect($targets) : $targets;
-                        $levelsColl = is_array($levels) ? collect($levels) : $levels;
+            <tbody>
+            @forelse($sales as $s)
+            @php
+                $ts = $targets->get($s->id);
+                $effective = $ts?->target ?? ($levels[$s->level]->amount ?? 0);
+                $source = $ts?->source ?? 'default';
+            @endphp
 
-                        $ts = $targetsColl ? $targetsColl->get($s->id) : null;
+            <tr>
+                <td>{{ ($sales->currentPage()-1)*$sales->perPage() + $loop->iteration }}</td>
+                <td>{{ $s->nama_sales }}</td>
 
-                        $effective = null;
-                        $source = null;
+                {{-- FORM UTAMA (LEVEL + TARGET) --}}
+                <form action="{{ route('target_sales.update', $s->id) }}"
+                    method="POST"
+                    class="form-update-target"
+                    data-sales="{{ $s->nama_sales }}"
+                    data-old-level="{{ $s->level ?? '' }}">
+                    @csrf
 
-                        if ($ts) {
-                            // handle jika $ts adalah array atau object
-                            $effective = isset($ts->target) ? $ts->target : (isset($ts['target']) ? $ts['target'] : 0);
-                            $source = isset($ts->source) ? $ts->source : (isset($ts['source']) ? $ts['source'] : 'override');
-                        } else {
-                            $lt = $levelsColl ? $levelsColl->get($s->level) : null;
-                            $effective = $lt ? (isset($lt->amount) ? $lt->amount : (isset($lt['amount']) ? $lt['amount'] : 0)) : 0;
-                            $source = 'default';
-                        }
-                    @endphp
-                    <tr>
-                        <td>{{ ($sales->currentPage()-1)*$sales->perPage() + $loop->iteration }}</td>
-                        <td>{{ $s->nama_sales }}</td>
-                        <td><span class="badge bg-info">{{ $s->level ?? '-' }}</span></td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <form action="{{ route('target_sales.update', $s->id) }}" method="POST" class="d-flex align-items-center">
-                                    @csrf
-                                    <input type="hidden" name="tahun" value="{{ $year }}">
-                                    <input type="hidden" name="bulan" value="{{ $month }}">
-                                    <input 
-                                        name="amount"
-                                        type="text"
-                                        class="form-control form-control-sm money-input"
-                                        style="width:160px"
-                                        value="{{ number_format($effective, 0, ',', '.') }}">
-                                    <button class="btn btn-sm btn-primary ml-2" type="submit">Simpan</button>
-                                </form>
-                            </div>
-                        </td>
+                    <input type="hidden" name="tahun" value="{{ $year }}">
+                    <input type="hidden" name="bulan" value="{{ $month }}">
+                    <input type="hidden" name="level" class="hidden-level">
 
-                        <td>
-                            @if(strtolower($source) === 'override')
-                                {{-- FORM BATAL dengan SweetAlert --}}
-                                <form action="{{ route('target_sales.reset', $s->id) }}"
-                                      method="POST"
-                                      class="form-batal d-inline"
-                                      data-nama="{{ $s->nama_sales }}">
-                                    @csrf
-                                    <input type="hidden" name="tahun" value="{{ $year }}">
-                                    <input type="hidden" name="bulan" value="{{ $month }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        Batal
-                                    </button>
-                                </form>
-                            @else
-                                <span class="text-secondary">-</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="5" class="text-center">Belum ada sales.</td></tr>
-                @endforelse
-                </tbody>
+                    {{-- LEVEL --}}
+                    <td>
+                        <select class="form-control form-control-sm level-select" required>
+                            <option value="">-- Pilih Level --</option>
+                            @foreach($levels as $lvl)
+                                <option value="{{ $lvl->level }}"
+                                    {{ $s->level === $lvl->level ? 'selected' : '' }}>
+                                    {{ $lvl->level }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </td>
+
+                    {{-- TARGET --}}
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <input type="text"
+                                name="amount"
+                                class="form-control form-control-sm money-input"
+                                style="width:150px"
+                                value="{{ number_format($effective, 0, ',', '.') }}"
+                                required>
+                            <button class="btn btn-sm btn-primary ml-2">Simpan</button>
+                        </div>
+                    </td>
+                </form>
+
+                {{-- AKSI --}}
+                <td>
+                    @if($source === 'override')
+                        <form action="{{ route('target_sales.reset', $s->id) }}"
+                            method="POST"
+                            class="form-batal d-inline"
+                            data-nama="{{ $s->nama_sales }}">
+                            @csrf
+                            <input type="hidden" name="tahun" value="{{ $year }}">
+                            <input type="hidden" name="bulan" value="{{ $month }}">
+                            <button class="btn btn-sm btn-outline-danger">Batal</button>
+                        </form>
+                    @else
+                        <span class="text-muted">-</span>
+                    @endif
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="5" class="text-center">Belum ada sales</td></tr>
+            @endforelse
+            </tbody>
             </table>
         </div>
     </div>
@@ -122,52 +128,68 @@
 @endsection
 
 @section('scripts')
-    {{-- SweetAlert2 --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- Format input uang & SweetAlert Batal --}}
-    <script>
-    // Formatter input rupiah
-    document.querySelectorAll('.money-input').forEach(function (input) {
-        input.addEventListener('input', function () {
-            let value = this.value.replace(/\D/g, ''); // buang semua huruf/titik/koma
-            if (value === '') {
-                this.value = '';
-                return;
-            }
-            this.value = new Intl.NumberFormat('id-ID').format(value);
-        });
-
-        // Pada submit: ubah ke angka asli
-        input.form?.addEventListener('submit', function () {
-            document.querySelectorAll('.money-input').forEach(function (inp) {
-                inp.value = inp.value.replace(/\D/g, ''); // kirim numeric ke backend
-            });
-        });
+<script>
+// format rupiah
+document.querySelectorAll('.money-input').forEach(inp => {
+    inp.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g,'');
+        this.value = new Intl.NumberFormat('id-ID').format(this.value);
     });
+});
 
-    // SweetAlert untuk tombol Batal (reset override)
-    document.querySelectorAll('.form-batal').forEach(function(form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // block submit biasa
+// submit + konfirmasi level
+document.querySelectorAll('.form-update-target').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            const nama = this.dataset.nama || 'sales ini';
+        const salesName = this.dataset.sales;
+        const oldLevel  = this.dataset.oldLevel || '-';
+        const select    = this.querySelector('.level-select');
+        const newLevel  = select.value;
 
+        if (!newLevel) {
+            Swal.fire('Level wajib dipilih', '', 'warning');
+            return;
+        }
+
+        this.querySelector('.hidden-level').value = newLevel;
+
+        if (oldLevel !== newLevel) {
             Swal.fire({
-                title: 'Batalkan Target ?',
-                text: 'Target untuk ' + nama + ' akan dihapus dan kembali ke awal.',
+                title: 'Ubah Level Sales?',
+                html: `
+                    <b>${salesName}</b><br>
+                    ${oldLevel} → ${newLevel}
+                `,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, batalkan',
+                confirmButtonText: 'Ya, Simpan',
                 cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.submit(); // lanjut submit ke controller
+            }).then(r => {
+                if (r.isConfirmed) {
+                    this.submit();
                 }
             });
-        });
+        } else {
+            this.submit();
+        }
     });
-    </script>
+});
+
+// reset override
+document.querySelectorAll('.form-batal').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Batalkan target?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Batal'
+        }).then(r => r.isConfirmed && this.submit());
+    });
+});
+</script>
 @endsection

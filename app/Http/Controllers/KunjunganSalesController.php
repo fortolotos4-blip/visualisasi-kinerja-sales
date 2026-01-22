@@ -27,7 +27,7 @@ class KunjunganSalesController extends Controller
         $query->whereDate('tanggal_kunjungan', $request->tanggal);
     }
 
-    $kunjungan = $query->orderBy('tanggal_kunjungan', 'desc')->paginate(3);
+    $kunjungan = $query->orderBy('tanggal_kunjungan', 'desc')->paginate(5);
 
     return view('kunjungan_sales.index', compact('kunjungan'));
 }

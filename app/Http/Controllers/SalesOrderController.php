@@ -32,7 +32,7 @@ class SalesOrderController extends Controller
         $query->where('customer_id', $request->customer_id);
     }
 
-    $orders = $query->orderBy('created_at', 'desc')->paginate(3);
+    $orders = $query->orderBy('created_at', 'desc')->paginate(5);
 
     $allSales     = Sales::all();
     $allCustomers = Customer::all();
@@ -64,7 +64,7 @@ class SalesOrderController extends Controller
         $query->where('customer_id', $request->customer_id);
     }
 
-    $orders = $query->paginate(3)->appends($request->all());
+    $orders = $query->paginate(5)->appends($request->all());
 
     $customers = Customer::where('user_id', Auth::id())->get();
 

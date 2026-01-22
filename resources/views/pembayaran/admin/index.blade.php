@@ -55,7 +55,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">Tidak ada data pembayaran</td>
+                    <td colspan="9" class="text-center">Tidak ada data pembayaran</td>
                 </tr>
             @endforelse
         </tbody>

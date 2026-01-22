@@ -29,7 +29,7 @@ public function manager(Request $request)
         $query->where('customer_id', $request->customer_id);
     }
 
-    $penjualan = $query->orderBy('created_at','desc')->paginate(10); // tampilkan 10 data per halaman
+    $penjualan = $query->orderBy('created_at','desc')->paginate(5); // tampilkan 10 data per halaman
 
     // Tambahkan status "Lunas" ke setiap item
         $penjualan->getCollection()->transform(function ($item) {

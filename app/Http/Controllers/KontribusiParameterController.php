@@ -25,7 +25,7 @@ class KontribusiParameterController extends Controller
             $query->where('periode_tahun', $request->periode_tahun);
         }
 
-        $parameters = $query->paginate(10)->withQueryString();
+        $parameters = $query->paginate(50)->withQueryString();
 
         return view('kontribusi_parameters.index', compact('parameters'));
     }

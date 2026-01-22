@@ -17,7 +17,7 @@ class ProdukController extends Controller
         $query->orWhere('kode_produk', 'like', '%' . $request->search . '%');
     }
 
-    $produk = $query->orderBy('created_at', 'desc')->paginate(3)->withQueryString();
+    $produk = $query->orderBy('created_at', 'desc')->paginate(5)->withQueryString();
 
     return view('master.produk.index', compact('produk'));
     }

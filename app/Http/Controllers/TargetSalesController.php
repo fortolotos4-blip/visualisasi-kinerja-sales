@@ -119,34 +119,50 @@ public function store(Request $request)
 }
 
 
-    public function update(Request $request, $salesId)
-    {
-        $request->validate([
-            'tahun' => 'required|integer|min:2020',
-            'bulan' => 'required|integer|min:1|max:12',
-            'amount' => 'required|numeric|min:0',
-        ]);
+   public function update(Request $request, $salesId)
+{
+    $request->validate([
+        'tahun' => 'required|integer|min:2020',
+        'bulan' => 'required|integer|min:1|max:12',
+        'amount' => 'required|numeric|min:0',
+        'level'  => 'required|string'
+    ]);
 
-        $tahun = (int)$request->tahun;
-        $bulan = (int)$request->bulan;
-        $amount = (float)$request->amount;
+    $tahun  = (int) $request->tahun;
+    $bulan  = (int) $request->bulan;
+    $amount = (float) $request->amount;
+    $newLevel = $request->level;
 
-        DB::transaction(function() use($salesId,$tahun,$bulan,$amount) {
-            TargetSales::updateOrCreate(
-                ['sales_id' => $salesId, 'tahun' => $tahun, 'bulan' => $bulan],
-                [
-                    'target' => $amount,
-                    'source' => 'override',
-                    'overridden_by' => auth()->id(),
-                    'overridden_at' => now(),
-                    'level_when_set' => Sales::find($salesId)->level,
-                    'status' => 'Aktif'
-                ]
-            );
-        });
+    DB::transaction(function () use ($salesId, $tahun, $bulan, $amount, $newLevel) {
 
-        return back()->with('success', 'Target per-sales berhasil disimpan.');
-    }
+        $sales = Sales::lockForUpdate()->findOrFail($salesId);
+
+        // === 1. Jika level berubah → update level sales ===
+        if ($sales->level !== $newLevel) {
+            $sales->update(['level' => $newLevel]);
+        }
+
+        // === 2. Simpan / override target ===
+        TargetSales::updateOrCreate(
+            [
+                'sales_id' => $salesId,
+                'tahun'    => $tahun,
+                'bulan'    => $bulan,
+            ],
+            [
+                'target'          => $amount,
+                'source'          => 'override',
+                'overridden_by'   => auth()->id(),
+                'overridden_at'   => now(),
+                'level_when_set'  => $newLevel,
+                'status'          => 'Aktif',
+            ]
+        );
+    });
+
+    return back()->with('success', 'Level dan target sales berhasil disimpan.');
+}
+
 
     public function reset(Request $request, $salesId)
     {
