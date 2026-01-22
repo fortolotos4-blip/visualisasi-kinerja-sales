@@ -35,12 +35,15 @@
                     <td>{{ $item->tanggal_pembayaran }}</td>
                     <td>Rp{{ number_format($item->jumlah, 0, ',', '.') }}</td>
                     <td>
-                        @if($item->bukti)
-                            <a href="{{ asset('storage/' . $item->bukti) }}" target="_blank">Lihat</a>
-                        @else
-                            -
-                        @endif
+                    @if($item->bukti)
+                        <a href="{{ $item->bukti }}" target="_blank">
+                            Lihat Bukti
+                        </a>
+                    @else
+                        -
+                    @endif
                     </td>
+
                     <td>{{ ucfirst($item->status) }}</td>
                 </tr>
             @empty

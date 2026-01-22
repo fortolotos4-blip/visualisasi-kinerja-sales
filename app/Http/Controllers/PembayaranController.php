@@ -6,6 +6,7 @@ use App\Pembayaran;
 use App\SalesOrder;
 use App\Customer;
 use App\Sales;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -88,6 +89,8 @@ class PembayaranController extends Controller
     // Simpan data pembayaran
     public function store(Request $request)
     {
+        dd(config('cloudinary.cloud_url'));
+
         $request->validate([
             'sales_order_id' => 'required|exists:sales_orders,id',
             'tanggal_pembayaran' => 'required|date',
@@ -96,13 +99,20 @@ class PembayaranController extends Controller
             'bukti' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'catatan' => 'nullable|string'
         ]);
-        
 
         $bukti = null;
-        if ($request->hasFile('bukti')) {
-            $bukti = $request->file('bukti')->store('bukti_pembayaran', 'public');
-        }
 
+        if ($request->hasFile('bukti')) {
+            $upload = Cloudinary::upload(
+                $request->file('bukti')->getRealPath(),
+                [
+                    'folder' => 'bukti_pembayaran',
+                    'resource_type' => 'image'
+                ]
+            );
+
+            $bukti = $upload->getSecurePath(); // URL HTTPS
+        }
 
         Pembayaran::create([
             'sales_order_id' => $request->sales_order_id,

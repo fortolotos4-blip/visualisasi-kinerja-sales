@@ -109,6 +109,15 @@ public function store(Request $request)
                 'status' => 'Aktif'
             ]);
 
+            $now = now();
+
+            if ($tahun === (int)$now->year && $bulan === (int)$now->month) {
+                Sales::where('id', $s->id)->update([
+                    'target_penjualan' => $amount
+                ]);
+            }
+
+
             $created++;
         }
     });
@@ -149,6 +158,17 @@ public function store(Request $request)
                 'status' => 'Aktif'
             ]
         );
+        $now = now();
+
+        if ((int)$request->tahun === (int)$now->year &&
+            (int)$request->bulan === (int)$now->month) {
+
+            Sales::where('id', $salesId)->update([
+                'target_penjualan' => $request->amount
+            ]);
+        }
+
+    
     });
 
     return back()->with('success','Target & level berhasil disimpan.');
@@ -173,6 +193,21 @@ public function store(Request $request)
             'overridden_by' => null,
             'overridden_at' => null
         ]);
+
+        $now = now();
+
+        if ((int)$request->tahun === (int)$now->year &&
+            (int)$request->bulan === (int)$now->month) {
+
+            $defaultTarget = TargetSales::where('sales_id', $salesId)
+                ->where('tahun', $request->tahun)
+                ->where('bulan', $request->bulan)
+                ->value('target');
+
+            Sales::where('id', $salesId)->update([
+                'target_penjualan' => $defaultTarget ?? 0
+            ]);
+        }
 
     return back()->with('success', 'Target dikembalikan ke default.');
 }
@@ -223,6 +258,13 @@ public function store(Request $request)
                     'level_when_set' => $level,
                     'status' => 'Aktif',
                 ]);
+
+                if ($y === now()->year && $m === now()->month) {
+                Sales::where('id', $sales->id)->update([
+                    'target_penjualan' => (float) $lt->amount
+                ]);
+            }
+
             }
         });
     }

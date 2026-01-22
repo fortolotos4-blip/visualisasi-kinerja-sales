@@ -35,17 +35,13 @@
         </div>
         <div class="mb-3">
     <label>Bukti Pembayaran</label><br>
-    @if ($pembayaran->bukti)
-        <a href="{{ asset('storage/' . $pembayaran->bukti) }}" target="_blank">
-            <img src="{{ asset('storage/' . $pembayaran->bukti) }}" 
-                 alt="Bukti Pembayaran" 
-                 style="max-width: 300px; border-radius: 8px; border: 1px solid #ccc;">
-        </a>
-        <p class="text-muted mt-2">Klik gambar untuk memperbesar</p>
-    @else
-        <p class="text-danger">Tidak ada bukti pembayaran yang diunggah.</p>
-    @endif
-</div>
+        @if($pembayaran->bukti)
+            <img src="{{ $pembayaran->bukti }}"
+                style="max-width:300px;border:1px solid #ccc">
+        @else
+            <p class="text-danger">Tidak ada bukti pembayaran yang diunggah.</p>
+        @endif
+    </div>
         <div class="mb-3">
             <label>Status Pembayaran</label>
             <select name="status" class="form-control" required>
