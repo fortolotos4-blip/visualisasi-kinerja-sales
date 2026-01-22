@@ -198,7 +198,7 @@ public function store(Request $request)
                 'harga_pabrik' => $hargaPabrik,
                 'harga_kesepakatan' => $hargaKesepakatan,
                 'subtotal' => $subtotal,
-                'satuan' => $produk->satuan,        // ⬅️ ambil dari produk
+                'satuan' => $produk->satuan ?? '-',        // ⬅️ ambil dari produk
                 'alasan' => $it['alasan'] ?? null,  // boleh tetap disimpan kalau masih mau pakai
             ]);
 
