@@ -41,7 +41,13 @@ class KunjunganSalesController extends Controller
     } else {
         $sales = Sales::where('user_id', Auth::id())->first();
         $customers = Customer::where('user_id', Auth::id())
-        ->orderByRaw("FIELD(status_customer, 'baru', 'lama')")
+        ->orderByRaw("
+            CASE 
+                WHEN status_customer = 'baru' THEN 1
+                WHEN status_customer = 'lama' THEN 2
+                ELSE 3
+            END
+        ")
         ->orderBy('nama_customer')
         ->get();; // hanya customer milik sales tersebut
     }
