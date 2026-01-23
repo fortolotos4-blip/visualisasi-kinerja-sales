@@ -156,49 +156,44 @@ class SalesManagerController extends Controller
     {
         $today = Carbon::now();
 
-        // konfigurasi cooldown (bulan)
-        $promotionCooldownMonths = 6; // ubah sesuai kebijakan
+        // ===============================
+        // COOLDOWN PROMOSI
+        // ===============================
+        $promotionCooldownMonths = 6;
 
-        // jika sales baru saja dipromosikan dalam cooldown period -> langsung non-eligible
         if (!empty($sales->last_promoted_at)) {
             $last = Carbon::parse($sales->last_promoted_at);
-            $cutoff = Carbon::now()->subMonths($promotionCooldownMonths);
-            if ($last->greaterThan($cutoff)) {
+            if ($last->greaterThan($today->copy()->subMonths($promotionCooldownMonths))) {
                 return [
                     'eligible' => false,
                     'matched_window' => null,
-                    'windows_checked' => 0,
-                    'monthly' => [], // atau Anda bisa mengembalikan monthly lengkap jika diinginkan
-                    'visit_source' => Schema::hasTable('penawaran') ? 'penawaran' : (Schema::hasTable('kunjungan_sales') ? 'kunjungan_sales' : null),
-                    'trend_type' => null,
+                    'monthly' => [],
                     'reason' => 'Baru dipromosikan — menunggu masa tunggu promosi',
-                    'window_size' => 3,
                 ];
             }
         }
 
-        // 12 bulan terakhir, format YYYY-MM
+        // ===============================
+        // AMBIL 3 BULAN TERAKHIR (ROLLING)
+        // ===============================
         $months = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $dt = $today->copy()->subMonths($i);
-            $months[] = $dt->format('Y-m');
+        for ($i = 2; $i >= 0; $i--) {
+            $months[] = $today->copy()->subMonths($i)->format('Y-m');
         }
 
-        // prepare monthly container
+        // ===============================
+        // SIAPKAN DATA BULANAN
+        // ===============================
         $monthly = [];
         foreach ($months as $m) {
             $monthly[$m] = [
-                'tahun' => substr($m,0,4),
-                'bulan' => substr($m,5,2),
                 'sales' => 0.0,
-                'penawaran' => 0,
                 'target' => null,
-                'target_visits' => null, // akan diisi bila ada kolom di target_sales
             ];
         }
 
         // ===============================
-        // TOTAL PENJUALAN BULANAN (HEADER)
+        // TOTAL PENJUALAN PER BULAN
         // ===============================
         $rows = DB::table('sales_orders')
             ->select(
@@ -212,146 +207,52 @@ class SalesManagerController extends Controller
 
         foreach ($rows as $r) {
             if (isset($monthly[$r->ym])) {
-                $monthly[$r->ym]['sales'] = (float)$r->total;
+                $monthly[$r->ym]['sales'] = (float) $r->total;
             }
         }
 
-        // Ambil penawaran per bulan (jika ada)
-        if (Schema::hasTable('penawaran')) {
-            $pen = DB::table('penawaran')
-                ->select(DB::raw("TO_CHAR(tanggal_penawaran, 'YYYY-MM') as ym"), DB::raw("COUNT(*) as c"))
-                ->where('sales_id', $sales->id)
-                ->whereIn(DB::raw("TO_CHAR(tanggal_penawaran, 'YYYY-MM')"), $months)
-                ->groupBy('ym')
-                ->get();
-            foreach ($pen as $r) if (isset($monthly[$r->ym])) $monthly[$r->ym]['penawaran'] = (int)$r->c;
-        }
-
-        // ambil target bila ada (jangan paksa target menjadi syarat di sini — tapi nanti kita butuhkan untuk validasi)
-        $targetRows = DB::table('target_sales')
+        // ===============================
+        // TARGET PER BULAN
+        // ===============================
+        $targets = DB::table('target_sales')
             ->where('sales_id', $sales->id)
             ->whereIn(DB::raw("(tahun || '-' || LPAD(bulan::text, 2, '0'))"), $months)
             ->get();
 
-        // cek apakah target_sales punya kolom untuk target penawaran/kunjungan
-        $hasTargetVisitCol = Schema::hasColumn('target_sales', 'target_visit') || Schema::hasColumn('target_sales', 'target_penawaran') || Schema::hasColumn('target_sales', 'target_visits');
-
-        foreach ($targetRows as $tr) {
-            $k = $tr->tahun . '-' . str_pad($tr->bulan, 2, '0', STR_PAD_LEFT);
-            if (! isset($monthly[$k])) continue;
-
-            $monthly[$k]['target'] = is_null($tr->target) ? null : (float)$tr->target;
-
-            if ($hasTargetVisitCol) {
-                // normalisasi nama kolom target visit jika ada beberapa possible names
-                if (isset($tr->target_visit)) {
-                    $monthly[$k]['target_visits'] = is_null($tr->target_visit) ? null : (int)$tr->target_visit;
-                } elseif (isset($tr->target_penawaran)) {
-                    $monthly[$k]['target_visits'] = is_null($tr->target_penawaran) ? null : (int)$tr->target_penawaran;
-                } elseif (isset($tr->target_visits)) {
-                    $monthly[$k]['target_visits'] = is_null($tr->target_visits) ? null : (int)$tr->target_visits;
-                } else {
-                    $monthly[$k]['target_visits'] = null;
-                }
+        foreach ($targets as $t) {
+            $key = $t->tahun . '-' . str_pad($t->bulan, 2, '0', STR_PAD_LEFT);
+            if (isset($monthly[$key])) {
+                $monthly[$key]['target'] = (float) $t->target;
             }
         }
 
-        // Sliding window 3 bulan: cek strictly increasing penjualan dan setiap bulan memenuhi target (target harus >0)
-        $keys = array_keys($monthly);
-        $windowSize = 3;
+        // ===============================
+        // EVALUASI 3 BULAN TERAKHIR
+        // ===============================
+        $values = array_values($monthly);
 
-        // inisialisasi flag/variabel supaya tidak ada undefined variable
-        $eligibleBySales = false;
-        $matchedWindowSales = null;
+        $a  = $values[0]['sales'];
+        $b  = $values[1]['sales'];
+        $c  = $values[2]['sales'];
 
-        $eligibleByPenawaran = false;
-        $matchedWindowPenawaran = null;
+        $ta = $values[0]['target'];
+        $tb = $values[1]['target'];
+        $tc = $values[2]['target'];
 
-        $windowsChecked = 0;
-
-        // only check windows if we have enough months
-        if (count($keys) >= $windowSize) {
-            // cek sales (require target available & sales >= target setiap bulan)
-            for ($i = 0; $i <= count($keys) - $windowSize; $i++) {
-                $windowsChecked++;
-                $w = array_slice($keys, $i, $windowSize);
-
-                // safe access values
-                $a = isset($monthly[$w[0]]['sales']) ? (float)$monthly[$w[0]]['sales'] : 0.0;
-                $b = isset($monthly[$w[1]]['sales']) ? (float)$monthly[$w[1]]['sales'] : 0.0;
-                $c = isset($monthly[$w[2]]['sales']) ? (float)$monthly[$w[2]]['sales'] : 0.0;
-
-                $ta = isset($monthly[$w[0]]['target']) ? $monthly[$w[0]]['target'] : null;
-                $tb = isset($monthly[$w[1]]['target']) ? $monthly[$w[1]]['target'] : null;
-                $tc = isset($monthly[$w[2]]['target']) ? $monthly[$w[2]]['target'] : null;
-
-                // jika target tersedia untuk semua 3 bulan -> periksa kondisi ketat
-                if ($ta !== null && $tb !== null && $tc !== null) {
-                    $taF = (float)$ta;
-                    $tbF = (float)$tb;
-                    $tcF = (float)$tc;
-
-                    if (
-                        $taF > 0 && $tbF > 0 && $tcF > 0
-                        && $a > 0.0 && $b > 0.0 && $c > 0.0
-                        && $a < $b && $b < $c
-                        && $a >= $taF && $b >= $tbF && $c >= $tcF
-                    ) {
-                        $eligibleBySales = true;
-                        $matchedWindowSales = [$w[0], $w[2]];
-                        break;
-                    }
-                }
-                // jika target belum lengkap -> skip window ini untuk pengecekan sales
-            }
-
-            // Penawaran: hanya diperhitungkan jika tabel target_sales punya kolom target_visits
-            if ($hasTargetVisitCol && !$eligibleBySales) {
-                for ($i = 0; $i <= count($keys) - $windowSize; $i++) {
-                    $w = array_slice($keys, $i, $windowSize);
-
-                    $pa = isset($monthly[$w[0]]['penawaran']) ? (int)$monthly[$w[0]]['penawaran'] : 0;
-                    $pb = isset($monthly[$w[1]]['penawaran']) ? (int)$monthly[$w[1]]['penawaran'] : 0;
-                    $pc = isset($monthly[$w[2]]['penawaran']) ? (int)$monthly[$w[2]]['penawaran'] : 0;
-
-                    $pta = $monthly[$w[0]]['target_visits'] ?? null;
-                    $ptb = $monthly[$w[1]]['target_visits'] ?? null;
-                    $ptc = $monthly[$w[2]]['target_visits'] ?? null;
-
-                    // hanya pertimbangkan window ini jika semua target_visits tersedia (>0)
-                    if ($pta !== null && $ptb !== null && $ptc !== null) {
-                        $ptaI = (int)$pta; $ptbI = (int)$ptb; $ptcI = (int)$ptc;
-                        if (
-                            $ptaI > 0 && $ptbI > 0 && $ptcI > 0
-                            && $pa >= $ptaI && $pb >= $ptbI && $pc >= $ptcI
-                            && $pa < $pb && $pb < $pc
-                        ) {
-                            $eligibleByPenawaran = true;
-                            $matchedWindowPenawaran = [$w[0], $w[2]];
-                            break;
-                        }
-                    }
-                    // jika target_visits tidak lengkap -> skip window ini
-                }
-            }
-        }
-
-        // rule: eligible jika sales naik konsisten (dengan syarat target terpenuhi) OR penawaran naik konsisten (jika tersedia target_visits)
-        $eligible = $eligibleBySales || $eligibleByPenawaran;
-        $reason = null;
-        if ($eligibleBySales && $eligibleByPenawaran) $reason = 'Penjualan & Penawaran naik konsisten (target terpenuhi)';
-        elseif ($eligibleBySales) $reason = 'Penjualan naik konsisten (target terpenuhi)';
-        elseif ($eligibleByPenawaran) $reason = 'Penawaran naik konsisten';
+        $eligible =
+            $ta > 0 && $tb > 0 && $tc > 0 &&
+            $a > 0 && $b > 0 && $c > 0 &&
+            $a < $b && $b < $c &&
+            $a >= $ta && $b >= $tb && $c >= $tc;
 
         return [
-            'eligible' => (bool)$eligible,
-            'matched_window' => $eligibleBySales ? $matchedWindowSales : $matchedWindowPenawaran,
-            'windows_checked' => $windowsChecked,
+            'eligible' => $eligible,
+            'matched_window' => $eligible ? [$months[0], $months[2]] : null,
             'monthly' => $monthly,
-            'visit_source' => Schema::hasTable('penawaran') ? 'penawaran' : (Schema::hasTable('kunjungan_sales') ? 'kunjungan_sales' : null),
-            'trend_type' => $eligibleBySales ? 'sales' : ($eligibleByPenawaran ? 'visits' : null),
-            'reason' => $reason,
-            'window_size' => $windowSize,
+            'reason' => $eligible
+                ? 'Penjualan 3 bulan terakhir naik konsisten dan target terpenuhi'
+                : null,
         ];
     }
+
 }
