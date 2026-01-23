@@ -197,29 +197,22 @@ class SalesManagerController extends Controller
             ];
         }
 
-        // Ambil total penjualan per bulan menggunakan sales_order_details (sama seperti chart)
-        if (Schema::hasTable('sales_orders') && Schema::hasTable('sales_order_details')) {
-            $rows = DB::table('sales_order_details as sod')
-                ->join('sales_orders as so', 'sod.sales_order_id', '=', 'so.id')
-                ->select(DB::raw("TO_CHAR(so.tanggal, 'YYYY-MM') as ym"), DB::raw("SUM(sod.qty * sod.harga_satuan) as total"))
-                ->where('so.sales_id', $sales->id)
-                ->whereIn(DB::raw("TO_CHAR(so.tanggal, 'YYYY-MM')"), $months)
-                ->groupBy('ym')
-                ->get();
+        // ===============================
+        // TOTAL PENJUALAN BULANAN (HEADER)
+        // ===============================
+        $rows = DB::table('sales_orders')
+            ->select(
+                DB::raw("TO_CHAR(tanggal, 'YYYY-MM') as ym"),
+                DB::raw("SUM(COALESCE(total_harga,0)) as total")
+            )
+            ->where('sales_id', $sales->id)
+            ->whereIn(DB::raw("TO_CHAR(tanggal, 'YYYY-MM')"), $months)
+            ->groupBy('ym')
+            ->get();
 
-            foreach ($rows as $r) {
-                if (isset($monthly[$r->ym])) $monthly[$r->ym]['sales'] = (float)$r->total;
-            }
-        } else {
-            // fallback: hitung dari header jika ada field total_harga
-            $rows = DB::table('sales_orders')
-                ->select(DB::raw("TO_CHAR(tanggal, 'YYYY-MM') as ym"), DB::raw("SUM(COALESCE(total_harga,0)) as total"))
-                ->where('sales_id', $sales->id)
-                ->whereIn(DB::raw("TO_CHAR(tanggal, 'YYYY-MM')"), $months)
-                ->groupBy('ym')
-                ->get();
-            foreach ($rows as $r) {
-                if (isset($monthly[$r->ym])) $monthly[$r->ym]['sales'] = (float)$r->total;
+        foreach ($rows as $r) {
+            if (isset($monthly[$r->ym])) {
+                $monthly[$r->ym]['sales'] = (float)$r->total;
             }
         }
 
