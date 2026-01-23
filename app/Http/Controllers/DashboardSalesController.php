@@ -17,8 +17,8 @@ class DashboardSalesController extends Controller
 {
     public function index(Request $request)
 {
-    $bulan = $request->input('bulan', date('m'));
-    $tahun = $request->input('tahun', date('Y'));
+    $bulan = (int) $request->input('bulan', date('m'));
+    $tahun = (int) $request->input('tahun', date('Y'));
 
     // Ambil data sales sesuai user login
     $sales = Sales::where('user_id', Auth::id())->first();
