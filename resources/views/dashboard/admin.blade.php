@@ -49,9 +49,9 @@
             <div class="col-md-3">
                 <select name="bulan" class="form-control">
                     @foreach (range(1,12) as $b)
-                        <option value="{{ str_pad($b, 2, '0', STR_PAD_LEFT) }}" {{ $bulan == str_pad($b,2,'0',STR_PAD_LEFT) ? 'selected' : '' }}>
-                            {{ date('F', mktime(0, 0, 0, $b, 1)) }}
-                        </option>
+                <option value="{{ $b }}" {{ (int)$bulan === $b ? 'selected' : '' }}>
+                    {{ date('F', mktime(0, 0, 0, $b, 1)) }}
+                </option>
                     @endforeach
                 </select>
             </div>

@@ -239,7 +239,7 @@ class CustomerController extends Controller
 
         $customers = $query
             ->orderBy('created_at', 'desc')
-            ->paginate(3)               // boleh 5 / 10 sesuai selera
+            ->paginate(5)               // boleh 5 / 10 sesuai selera
             ->withQueryString();
 
         // data untuk dropdown sales

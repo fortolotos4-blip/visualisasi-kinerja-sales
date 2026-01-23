@@ -15,8 +15,9 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
 {
-    $bulan = str_pad($request->input('bulan', date('m')), 2, '0', STR_PAD_LEFT);
-    $tahun = $request->input('tahun', date('Y'));
+    $bulan = (int) $request->input('bulan', date('m'));
+    $tahun = (int) $request->input('tahun', date('Y'));
+
 
     // -----------------------------
     // Data per Sales
@@ -90,7 +91,8 @@ class DashboardController extends Controller
     ];
 
     for ($i = 1; $i <= 12; $i++) {
-        $bulanLoop = str_pad($i, 2, '0', STR_PAD_LEFT);
+
+        $bulanLoop = $i;
 
         $grafik['kunjungan'][] = KunjunganSales::whereMonth('tanggal_kunjungan', $bulanLoop)
             ->whereYear('tanggal_kunjungan', $tahun)
