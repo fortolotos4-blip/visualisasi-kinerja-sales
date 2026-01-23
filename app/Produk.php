@@ -14,5 +14,6 @@ class Produk extends Model
         'nama_produk',
         'kode_produk',
         'harga',
+        'satuan',
     ];
 }

@@ -16,8 +16,12 @@
             <input type="text" name="kode_produk" class="form-control" required>
         </div>
         <div class="form-group">
-            <label>Harga (Per Box)</label>
+            <label>Harga</label>
             <input type="number" name="harga" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Satuan</label>
+            <input type="text" name="satuan" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary">Simpan</button>
     </form>
