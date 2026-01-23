@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 @include('layouts.navbar')
 
@@ -39,12 +40,15 @@
                     <td>Rp{{ number_format($row->jumlah, 0, ',', '.') }}</td>
                     <td>{{ $row->tanggal_pembayaran }}</td>
                     <td>
-                        @if($row->bukti)
-                            <a href="{{ asset('storage/' . $row->bukti) }}" target="_blank">Lihat</a>
+                        @if($row->bukti && Str::startsWith($row->bukti, 'http'))
+                            <a href="{{ $row->bukti }}" target="_blank" rel="noopener">
+                                Lihat Bukti
+                            </a>
                         @else
-                            -
+                            <span class="text-muted">Tidak ada</span>
                         @endif
                     </td>
+
                     <td>{{ ucfirst($row->status) }}</td>
                     <td>@if($row->status !== 'diterima')
                         <a href="{{ route('pembayaran.admin.edit', ['id' => $row->id, 'page' => $pembayaran->currentPage()]) }}" class="btn btn-sm btn-primary">Verifikasi</a>
