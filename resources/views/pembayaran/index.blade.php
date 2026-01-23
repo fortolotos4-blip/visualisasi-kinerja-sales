@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Str; @endphp
 @extends('layouts.app')
 @include('layouts.navbar')
 
@@ -36,12 +37,15 @@
                     <td>Rp{{ number_format($item->jumlah, 0, ',', '.') }}</td>
                     <td>
                     @if($item->bukti)
-                        <a href="{{ $item->bukti }}" target="_blank">
-                            Lihat Bukti
-                        </a>
+                    @if(Str::startsWith($item->bukti, 'http'))
+                        <a href="{{ $item->bukti }}" target="_blank">Lihat Bukti</a>
                     @else
-                        -
+                        <span class="text-muted">Bukti lama (tidak tersedia)</span>
                     @endif
+                @else
+                    -
+                @endif
+
                     </td>
 
                     <td>{{ ucfirst($item->status) }}</td>

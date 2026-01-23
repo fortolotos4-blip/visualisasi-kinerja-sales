@@ -34,12 +34,11 @@
             <input type="text" class="form-control" value="{{ $pembayaran->tanggal_pembayaran }}" disabled>
         </div>
         <div class="mb-3">
-    <label>Bukti Pembayaran</label><br>
-        @if($pembayaran->bukti)
-            <img src="{{ $pembayaran->bukti }}"
-                style="max-width:300px;border:1px solid #ccc">
+            <label>Bukti Pembayaran</label><br>
+                @if($pembayaran->bukti && Str::startsWith($pembayaran->bukti, 'http'))
+            <img src="{{ $pembayaran->bukti }}" style="max-width:300px;border:1px solid #ccc">
         @else
-            <p class="text-danger">Tidak ada bukti pembayaran yang diunggah.</p>
+            <p class="text-muted">Bukti tidak tersedia</p>
         @endif
     </div>
         <div class="mb-3">

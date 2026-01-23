@@ -9,7 +9,6 @@ use App\Sales;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class PembayaranController extends Controller
 {
@@ -89,7 +88,6 @@ class PembayaranController extends Controller
     // Simpan data pembayaran
     public function store(Request $request)
     {
-        dd(config('cloudinary.cloud_url'));
 
         $request->validate([
             'sales_order_id' => 'required|exists:sales_orders,id',
