@@ -25,6 +25,7 @@
                 <th>Nama</th>
                 <th>Kode</th>
                 <th>Harga</th>
+                <th>Satuan</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -35,6 +36,7 @@
                 <td>{{ $item->nama_produk }}</td>
                 <td>{{ $item->kode_produk }}</td>
                 <td>Rp{{ number_format($item->harga, 0, ',', '.') }}</td>
+                <td>{{ $item->satuan }}</td>
                 
                 {{-- ⬇ Tambahkan tombol Edit dan Delete di sini --}}
         <td>
